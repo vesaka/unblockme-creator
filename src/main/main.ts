@@ -28,6 +28,7 @@ function createWindow() {
 }
 
 const handleRequest = async (ev, path, data) => {
+    
     for (const route of routes) {
         if (path === route.name) {app
             return await route.action(data);

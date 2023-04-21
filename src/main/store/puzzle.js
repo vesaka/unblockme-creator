@@ -1,6 +1,6 @@
+const ValidationError = require('../lib/validation-error.js');
 const fs = require('fs');
 const path = require('path');
-
 const filepath = path.join(process.cwd(), 'storage/puzzles.json');
 
 
@@ -10,9 +10,18 @@ const save = (data) => {
         content.boards = [];
     }
     
-    content.boards.push(data);
+    if (!data.name) {
+        throw new ValidationError('Name is required');
+    }
+    
+    for (let board of content.boards) {
+        if (board.name === data.name) {
+            throw new ValidationError('Name is taken');
+        }
+    }    
+    
     fs.writeFileSync(filepath, JSON.stringify(content, null, 4));
-    return content;
+    return 'Saved';
 };
 
 const load = (name) => {

@@ -29,8 +29,17 @@
                     </div>
                 </div>
             </div>
-            <Modal>
-                
+            <Modal id="save-as" ref="saveAs">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">Save As</span>
+                    <input type="text" class="form-control" placeholder="Username"  aria-label="Save Name" aria-describedby="basic-addon1" v-model="input.name">
+                   
+                </div>
+                 <p class="text text-danger" v-html="errors.name"></p>
+                <div class="d-flex flex-row justify-content-center">
+                    <button class="btn btn-primary pr-2" @click="saveGame">Save</button>
+                    <button class="btn btn-secondary" @click="saveModal.hide()">Close</button>
+                </div>
             </Modal>
         </div>
     </Transition>
@@ -38,14 +47,18 @@
 <script setup>
     import { ref, reactive, computed, watchEffect, onBeforeMount, onMounted, onBeforeUnmount, nextTick } from 'vue';
     import Modal from '../ui/Modal.vue';
+    import ValidationError from '$root/lib/validation-error.js';
     import { useTimer, useStopwatch } from 'vue-timer-hook';
-
     const timer = useTimer();
     const stopwatch = useStopwatch();
     const IDLE = 'idle';
     const READY = 'ready';
     const CHECKING = 'checking';
     const EDITING = 'editing';
+    
+    let saveModal = null;
+    const errors = reactive({});
+    const input = reactive({});
 
     const BOARD_SIZE = 6;
     const BLOCK_SIZE = 100;
@@ -79,6 +92,7 @@
     let pathLen = 0;
     let editMode = false;
     let firstEdit = true;
+    let moveCount;
     /**
      * Refs
      */
@@ -109,7 +123,7 @@
     const renderMessages = () => {
         notes.value = messages;
     };
-    
+
     const padZero = v => {
         return String(v.value).padStart(2, '0');
     };
@@ -120,7 +134,7 @@
             {id: 'reset', title: 'Reset', action: resetBoard},
             {id: 'createGame', title: 'Create Game', action: createGame},
             {id: 'newGame', title: 'New Game', action: newGame},
-            {id: 'saveGame', title: 'Save', action: saveGame}
+            {id: 'saveGame', title: 'Save', action: () => saveModal.show()}
         ];
     });
 
@@ -290,23 +304,23 @@
             blocks = cb;
             messages.push(`Longest path is ${pathLen}`);
             const keys = getKeysFromBlocks(blocks);
-            const moveCount = graph[keys[0]][keys[1]] - 1;
+            moveCount = graph[keys[0]][keys[1]] - 1;
             messages.push(`Nb moves to win is ${moveCount}`);
             messages.push(`End analysing path`);
-            
-        } else { 
+
+        } else {
             messages.push(`No path to analyse`);
         }
 
         renderMessages();
-        
+
         console.log(Object.values(Object.values(graph)[0]).length);
 
     };
-    
+
     const newGame = () => {
-        
-    }
+
+    };
 
     const createGame = () => {
         loading.value = true;
@@ -595,7 +609,7 @@
             messages = reactive([]);
             const keys = getKeysFromBlocks(blocks);
             if (isKey(keys)) {
-                const moveCount = graph[keys[0]][keys[1]];
+                moveCount = graph[keys[0]][keys[1]];
                 if (moveCount) {
                     messages.push(`${(graph[keys[0]][keys[1]] - 1)} moves before you win`);
                 } else {
@@ -606,13 +620,11 @@
             }
         }
     };
-    
+
     const transformBlocks = () => {
         const list = [];
-        console.log(blocks);
         for (const block of blocks) {
             const t = block.bp % BOARD_SIZE;
-            console.log(block.bt, xDim[block.bt], yDim[block.bt]);
             list.push({
                 id: block.bn,
                 orientation: block.bt < 2 ? 'horizontal' : 'vertical',
@@ -621,23 +633,34 @@
                 col: (block.bp - t) / BOARD_SIZE
             });
         }
-        
+
         return list;
     };
-    
+
+
     const saveGame = () => {
-        electronAPI.post('save-puzzle', transformBlocks())
-                .then((res) => {
-        })
+        electronAPI.post('save-puzzle', { 
+                    blocks: transformBlocks(),
+                    name: input.name,
+                    moves: moveCount
+                })
+                .then((res) => {})
+                .catch(err => {
+                    if (err instanceof ValidationError) {
+                        errors.name = err.message;
+                    }
+                });
     };
 
     onMounted(() => {
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onEndMove);
         start();
-
+        saveModal = new bootstrap.Modal(document.getElementById('save-as'), {
+            keyboard: false
+          });
     });
-    
+
     onBeforeUnmount(() => {
         window.removeEventListener('mousemove', onMove);
         window.removeEventListener('mouseup', onEndMove);

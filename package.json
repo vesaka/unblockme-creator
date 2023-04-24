@@ -28,8 +28,11 @@
         "vite": "^4.1.1"
     },
     "dependencies": {
+        "child_process": "^1.0.2",
         "fs": "^0.0.1-security",
         "jsonfile": "^6.1.0",
+        "pyodide": "^0.23.1",
+        "python-shell": "^5.0.0",
         "vue": "^3.2.47",
         "vue-router": "^4.1.6",
         "vue-timer-hook": "^1.0.76"

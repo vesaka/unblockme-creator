@@ -1,4 +1,4 @@
-const {save, load} = require('./store/puzzle.js');
+const {save, load, solve} = require('./store/puzzle.js');
 module.exports = [
     {
         name: 'save-puzzle',
@@ -7,6 +7,10 @@ module.exports = [
     {
         name: 'load-puzzle',
         action: load
+    },
+    {
+        name: 'solve-puzzle',
+        action: solve
     }
 ];
 

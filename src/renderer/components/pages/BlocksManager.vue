@@ -1,7 +1,7 @@
 <template>
     <Transition>
         <div class="flex flex-col">
-            <div class="flex flex-row py-1" id="buttons" ref="buttons">
+            <div class="flex flex-row py-1 px-2" id="buttons" ref="buttons">
                 <button v-for="btn in actionButtons"
                         id="btn.id"
                         class="btn btn-primary"
@@ -17,7 +17,7 @@
                          class="block"
                          @mousedown.prevent="ev => onStartMove(ev, block)"
                          @mousemove.prevent="ev => onMove(ev, block)"
-                         :style="block.style" :id="`block${index}`"></div>
+                         :style="block.style" :id="`block${index}`" v-html="index+1"></div>
                 </div>
                 <div id="right">
                     <div v-if="false">
@@ -130,8 +130,7 @@
 
     const actionButtons = computed(() => {
         return [
-            {id: 'check', title: 'Analyze', action: checkBoard},
-            {id: 'reset', title: 'Reset', action: resetBoard},
+            {id: 'check', title: 'Solve', action: solveGame},
             {id: 'createGame', title: 'Create Game', action: createGame},
             {id: 'newGame', title: 'New Game', action: newGame},
             {id: 'saveGame', title: 'Save', action: () => saveModal.show()}
@@ -314,12 +313,11 @@
 
         renderMessages();
 
-        console.log(Object.values(Object.values(graph)[0]).length);
 
     };
 
     const newGame = () => {
-
+        createGame();
     };
 
     const createGame = () => {
@@ -360,10 +358,10 @@
         !loopCount && console.log("LOOP COUNT REACH 0");
         blocks = fblocks;
         messages.push(`End digging with ${maxLen}`);
-        return blocks;
+
         renderBoard(blocks);
         checkBoard();
-
+        loading.value = false;
     };
 
     const createNewBoard = () => {
@@ -637,18 +635,45 @@
         return list;
     };
 
+    const transformBlocksAsString = () => {
+        const list = [];
+        for (const block of blocks) {
+            const t = block.bp % BOARD_SIZE;
+            list.push(`id:${block.bn},orientation:${block.bt < 2 ? 'horizontal' : 'vertical'},size:${Math.max(xDim[block.bt], yDim[block.bt])},row:${t},col${(block.bp - t) / BOARD_SIZE}`);
+        }
+
+        return list;
+    };
+
+    const solveGame = () => {
+        electronAPI.post('solve-puzzle',transformBlocks())
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch(err => {
+                    // if (err instanceof ValidationError) {
+                    //     errors.name = err.message;
+                    // }
+                });
+    };
 
     const saveGame = () => {
-        electronAPI.post('save-puzzle', { 
-                    blocks: transformBlocks(),
-                    name: input.name,
-                    moves: moveCount
+
+        electronAPI.post('save-puzzle', {
+                    name: input.name,   
+                    moves: moveCount,
+                    blocks: transformBlocksAsString(),
+                    
                 })
                 .then((res) => {})
                 .catch(err => {
-                    if (err instanceof ValidationError) {
-                        errors.name = err.message;
-                    }
+                    // if (err instanceof ValidationError) {
+                    //     errors.name = err.message;
+                    // }
+                }).then(() => {
+                    input.name = '';
+                    saveModal.hide();
+
                 });
     };
 

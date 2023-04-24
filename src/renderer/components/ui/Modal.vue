@@ -18,7 +18,6 @@
 <script setup>
     import { getCurrentInstance } from 'vue';
     const { slots } = getCurrentInstance();
-    console.log(slots);
     const props = defineProps({
         id: {
             type: String,

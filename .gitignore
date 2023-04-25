@@ -1,6 +1,7 @@
 node_modules
 dist
 build
-
+nbproject
+package-lock.json
 .vscode
 .idea

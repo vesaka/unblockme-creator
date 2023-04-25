@@ -111,7 +111,7 @@
     const start = () => {
         blocks = createFromString('200 002 011 422 120 232 432 042 052 242 252 440 540');
         renderBoard(blocks);
-        checkBoard();
+        //checkBoard();
     };
 
     const loading = ref(false);
@@ -360,7 +360,7 @@
         messages.push(`End digging with ${maxLen}`);
 
         renderBoard(blocks);
-        checkBoard();
+        //checkBoard();
         loading.value = false;
     };
 
@@ -627,8 +627,8 @@
                 id: block.bn,
                 orientation: block.bt < 2 ? 'horizontal' : 'vertical',
                 size: Math.max(xDim[block.bt], yDim[block.bt]),
-                row: t,
-                col: (block.bp - t) / BOARD_SIZE
+                row: (block.bp - t) / BOARD_SIZE,
+                col: t
             });
         }
 
@@ -639,7 +639,7 @@
         const list = [];
         for (const block of blocks) {
             const t = block.bp % BOARD_SIZE;
-            list.push(`id:${block.bn},orientation:${block.bt < 2 ? 'horizontal' : 'vertical'},size:${Math.max(xDim[block.bt], yDim[block.bt])},row:${t},col${(block.bp - t) / BOARD_SIZE}`);
+            list.push(`id:${block.bn},orientation:${block.bt < 2 ? 'horizontal' : 'vertical'},size:${Math.max(xDim[block.bt], yDim[block.bt])},row:${t},col:${(block.bp - t) / BOARD_SIZE}`);
         }
 
         return list;

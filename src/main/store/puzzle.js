@@ -8,14 +8,31 @@ const save = (data) => {
     if (!Array.isArray(content.boards)) {
         content.boards = [];
     }
+    data.solution = solve(data.blocks).map(serialize);
+    data.blocks = data.blocks.map(serialize);
+    if (!data.name) {
+        data.name = `game${content.boards.length}`
+    }    
+
+    content.boards.push(data);
 
     fs.writeFileSync(filepath, JSON.stringify(content, null, 4));
-    return 'Saved';
+    return {
+        moves: data.solution.length
+    };
 };
 
 const load = (data) => {
     const content = getFileContent();
-    
+
+    content.boards.map(board => {
+        board.blocks = board.blocks.map(unserialize);
+
+        return board;
+
+    });
+
+    return content.boards;
 };
 
 const getFileContent = () => {
@@ -26,7 +43,7 @@ const getFileContent = () => {
             boards: []
         }, null, 4));
     }
-    
+
     return JSON.parse(fs.readFileSync(filepath));
 }
 
@@ -35,16 +52,56 @@ const solve = blocks => {
     for (const block of blocks) {
         list.push({
             length: block.size,
-            direction: block.orientation === 'horizontal' ? 'H' : 'V',
+            direction: block.orientation.charAt(0).toUpperCase(),
             position: [block.row, block.col],
             isTarget: block.id === 1
         });
     }
 
-    
-    const game = new solver.Game({ size: 6, blocks: list});
+    const game = new solver.Game({ size: 6, blocks: list });
     const solution = solver.solve(game);
+
+
+    return solution;
 };
 
-module.exports = {save, load, solve};
+const serialize = (obj) => {
+    const arr = [];
+    for (let k in obj) {
+        arr.push(`${k}:${obj[k]}`);
+    }
+    return arr.join(',');
+};
+
+const unserialize = (str) => {
+    const o = {};
+    str.split(',').forEach(f => {
+        const [k, v] = f.split(':');
+        o[k] = !isNaN(v) ? Number(v) : v;
+    });
+    return o;
+};
+
+const updateBoards = () => {
+    const content = getFileContent();
+
+    let counter = 0;
+    const stopAt = 3;
+    content.boards = content.boards.map(board => {
+        if (!board.solution && counter < stopAt) {
+            const blocks = board.blocks.map(unserialize);
+            console.log(blocks);
+            //board.solution = solve(blocks).map(serialize);
+            // console.log(board.solution);
+            counter++;
+        }
+        
+        return board;
+    });
+
+    //fs.writeFileSync(filepath, JSON.stringify(content, null, 4));
+    return [];
+}
+
+module.exports = { save, load, solve };
 

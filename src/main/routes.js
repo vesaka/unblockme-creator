@@ -5,7 +5,7 @@ module.exports = [
         action: save
     },
     {
-        name: 'load-puzzle',
+        name: 'load-puzzles',
         action: load
     },
     {

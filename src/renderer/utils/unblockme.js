@@ -1,62 +1,65 @@
 class UnblockMe {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.goalPosition = {x: this.width - 1, y: Math.floor(this.height / 2)};
-        this.grid = this.generateGrid();
+    constructor(size) {
+        this.size = size;
+        this.goalPosition = {x: this.size - 1, y: Math.floor(this.size / 2)};
+        //this.grid = this.generateGrid();
     }
 
     generateGrid() {
-        // Create an empty grid
-        const grid = [];
-        for (let y = 0; y < this.height; y++) {
+        let isSolvable = false;
+        let grid; 
+        
+        while (!isSolvable) {
+          // Create an empty grid
+          grid = [];
+          for (let y = 0; y < this.size; y++) {
             const row = [];
-            for (let x = 0; x < this.width; x++) {
-                row.push(0);
+            for (let x = 0; x < this.size; x++) {
+              row.push(0);
             }
             grid.push(row);
-        }
-
-        // Add the goal block to the grid
-        grid[this.goalPosition.y][this.goalPosition.x] = 1;
-
-        // Add random blocks to the grid
-        const numBlocks = Math.floor(Math.random() * (this.width + this.height) / 2);
-        const blockPositions = []; // Keep track of block positions for checking solvability
-        for (let i = 0; i < numBlocks; i++) {
-            const x = Math.floor(Math.random() * this.width);
-            const y = Math.floor(Math.random() * this.height);
-            if (grid[y][x] === 0) {
+          }
+      
+          // Add the goal block to the grid
+          grid[this.goalPosition.y][this.goalPosition.x] = 1;
+      
+          // Add random blocks to the grid
+          const numBlocks = Math.floor(Math.random() * (this.size + this.size) / 2);
+          const blockPositions = []; // Keep track of block positions for checking solvability
+          for (let i = 0; i < numBlocks; i++) {
+            let blockAdded = false;
+            while (!blockAdded) {
+              const x = Math.floor(Math.random() * this.size);
+              const y = Math.floor(Math.random() * this.size);
+              if (grid[y][x] === 0) {
                 grid[y][x] = 2;
                 blockPositions.push({x, y});
-            } else {
-                i--; // Retry placing the block
+                blockAdded = true;
+              }
             }
+          }
+      
+          // Add the player block to the grid
+          let playerPosition = {x: -1, y: -1};
+          while (playerPosition.x === -1 || playerPosition.y === -1 || grid[playerPosition.y][playerPosition.x] !== 0) {
+            playerPosition = {x: Math.floor(Math.random() * this.size), y: Math.floor(Math.random() * this.size)};
+          }
+          grid[playerPosition.y][playerPosition.x] = 3;
+      
+          // Check if the puzzle is solvable
+          const emptyPositions = this.findEmptyPositions(grid);
+          isSolvable = this.isSolvable(blockPositions, playerPosition, emptyPositions);
         }
-
-        // Add the player block to the grid
-        let playerPosition = {x: -1, y: -1};
-        while (playerPosition.x === -1 || playerPosition.y === -1 || grid[playerPosition.y][playerPosition.x] !== 0) {
-            playerPosition = {x: Math.floor(Math.random() * this.width), y: Math.floor(Math.random() * this.height)};
-        }
-        grid[playerPosition.y][playerPosition.x] = 3;
-
-        // Check if the puzzle is solvable
-        const emptyPositions = this.findEmptyPositions(grid);
-        const isSolvable = this.isSolvable(blockPositions, playerPosition, emptyPositions);
-        if (!isSolvable) {
-            // If the puzzle is not solvable, regenerate it
-            return this.generateGrid();
-        }
-
+      
         return grid;
-    }
+      }
+      
 
     findEmptyPositions(grid) {
         // Find all empty positions on the grid
         const emptyPositions = [];
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
                 if (grid[y][x] === 0) {
                     emptyPositions.push({x, y});
                 }
@@ -103,7 +106,7 @@ class UnblockMe {
 
     isValidPosition(position, emptyPositions) {
 // Check if a block position is valid (i.e., within the grid and not blocked by other blocks)
-        return position.x >= 0 && position.x < this.width && position.y >= 0 && position.y < this.height &&
+        return position.x >= 0 && position.x < this.size && position.y >= 0 && position.y < this.size &&
                 emptyPositions.some(emptyPosition => emptyPosition.x === position.x && emptyPosition.y === position.y);
     }
 
@@ -121,3 +124,5 @@ class UnblockMe {
         }
     }
 }
+
+export default UnblockMe;
